@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Oct 25 17:21:17 2019
-
-@author: Asus
-"""
 
 import numpy as np
 from datetime import datetime
@@ -14,59 +9,10 @@ import pandas as pd
 import pandas_datareader.data as web
 import requests
 
-# =============================================================================
-# from iexfinance.stocks import Stock
-# from iexfinance.stocks import get_historical_data
-# =============================================================================
-
-
 import matplotlib.pyplot as plt
 
-# =============================================================================
-# start_date = datetime(2017, 1, 1)
-# end_date = datetime.now()
-# =============================================================================
 
-
-# =============================================================================
-# ticker = "GOOGL"
-# 
-# #df = get_historical_data(ticker, start=start_date, end=end_date, output_format = 'pandas', token = "sk_f5b5958c459d432fa2adeed8a90ab0fb")
-# 
-# 
-# df = web.DataReader(ticker, "yahoo", start_date, end_date)
-# df.to_csv(ticker + "_history.csv")
-# 
-# # len(df)
-# 
-# # alist = []
-# 
-# # for i in range(len(df)):
-# #     alist.append(i)
-# 
-# close_vals = df['Close'].values
-# 
-# dates = np.arange(len(df))
-# 
-# plt.plot(dates, close_vals)
-# 
-# Mat = np.zeros((len(df), 2))
-# Mat[:, 0] = np.ones(len(df))
-# Mat[:, 1] = dates
-# model = LinearRegression().fit(Mat, close_vals)
-# coeffs = model.coef_
-# intercept= model.intercept_
-# a = np.linspace(0, len(df), 10000)
-# b = intercept + coeffs[1]*a
-# plt.plot(a, b)
-# 
-# 
-# n_days = 10
-# print(model.intercept_ + coeffs[1] * (len(dates) + n_days))
-# =============================================================================
-
-
-
+#function to retrieve name of company based on stock ticker symbol
 def get_symbol(symbol):
     url = "http://d.yimg.com/autoc.finance.yahoo.com/autoc?query={}&region=1&lang=en".format(symbol)
     result = requests.get(url).json()
@@ -75,27 +21,35 @@ def get_symbol(symbol):
             return x['name']
 
 
-#Function
+#function to calculate the estimated future stock price based on historical
+#stock data and a linear regression model
 def predictLinear(ticker, start, days):
     givenTicker = ticker
     end_date = datetime.now()
+    
 #    Retrives stock data using Pandas Datareader
     newdf = web.DataReader(givenTicker, "yahoo", start, end_date)
     close_vals = newdf['Close'].values
-#    Make a list of numbers that correspond to a date
+    
+#    Make a list of closing values that correspond to a respective date
     dates = np.arange(len(newdf))
     plt.plot(dates, close_vals)
-#    Generate matriz to feed into Linear Regression algorithm
+    
+#    Generate matrix to feed into linear regression
     Mat = np.zeros((len(newdf), 2))
-#    First colum is a vector of ones
+    
+#    First column is a vector of ones
     Mat[:, 0] = np.ones(len(newdf))
-#    Second column is our dates (x-values)
+    
+#    Second column is dates (x-values)
     Mat[:, 1] = dates
-#    Generate Linear Regression model
+    
+#    Generate linear regression model
     model = LinearRegression().fit(Mat, close_vals)
     coeffs = model.coef_
     intercept= model.intercept_
-#    Graphing stuff
+    
+#   Creating visual graph of stock data and regression line
     a = np.linspace(0, len(newdf), 10000)
     b = intercept + coeffs[1]*a
     plt.title('Linear Regression Model for ' + get_symbol(ticker) + ' starting at ' + start.strftime('%m-%d-%Y'))
@@ -115,13 +69,17 @@ def predictLinear(ticker, start, days):
     return (model.intercept_ + coeffs[1] * (len(dates) + days))
     
 
-#ticker = input("Enter a stock ticker: ")
+#request ticker symbol, start date, and length of prediction in days from user
+    
 tickers = input("Enter a list of tickers seperated by commas: ")
 ticker_array = tickers.split(', ')
+
 start_date = input("Enter a start date (MM-DD-YYYY): ")
 start_date_converted = datetime.strptime(start_date, '%m-%d-%Y')
+
 days = int(input("Enter number of days: "))
+
+#for each ticker symbol print out the predicted stock value and corresponding graph
 for ticker in ticker_array:
     print(predictLinear(ticker, start_date_converted, days))
-#print(predictLinear(ticker, start_date_converted, days))
     
